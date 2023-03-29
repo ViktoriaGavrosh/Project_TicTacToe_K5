@@ -1,0 +1,127 @@
+package tictactoe
+
+fun main() {
+    val game1 = Game()
+    
+    game1.gameStart()
+}
+
+class Game() {
+    private val grid = MutableList(3){MutableList<Char>(3){' '}}
+    private var isX = true
+    
+    fun gameStart() {
+        showGrid()
+        while (true) {
+            val move = readMove()
+            makeMove(move[0], move[1])
+
+            val state = checkStateGame()
+            if (state != "Game not finished") {
+                println(state)
+                break
+            }
+        }
+    }
+
+    private fun readMove(): List<Int> {
+        val regex = Regex("\\d \\d")
+        val regex2 = Regex("[123] [123]")
+        var x = 0
+        var y = 0
+    
+        while(true) {
+            val moveString = readLine()!!
+       
+            if (!regex.matches(moveString)) { 
+                println("You should enter numbers!")
+                continue
+            }
+            if (!regex2.matches(moveString)) { 
+                println("Coordinates should be from 1 to 3!")
+                continue
+        }
+            x = Character.digit(moveString[0], 10) - 1 // because the player sees the field with indices 1, 2, 3 (not 0, 1, 2)
+            y = Character.digit(moveString[2], 10) - 1
+            if (grid[x][y] != ' ') {
+                println("This cell is occupied! Choose another one!")
+                continue
+            }
+            break
+        }
+        return listOf(x, y)
+    }
+
+    private fun makeMove(x: Int, y: Int) {
+        grid[x][y] = if (isX) 'X' else 'O'
+        isX = !isX  //turn passes to another player
+        showGrid()
+    }
+    
+    private fun checkStateGame(): String {
+        var result = ""
+        
+        val isWinX = checkWin('X')
+        val isWinO = checkWin('O')
+        val isEmptyCells = checkEmptyCells()
+        val isPossible = checkPossible()
+        
+        result = 
+            when {
+                (!isPossible) -> "Impossible"
+                (!isWinX && !isWinO && isEmptyCells) -> "Game not finished"
+                (!isWinX && !isWinO && !isEmptyCells) -> "Draw"
+                (isWinX && !isWinO) -> "X wins"
+                (isWinO && !isWinX) -> "O wins"
+                else -> "Impossible"
+            }
+        return result
+    }
+    
+    private fun checkWin(player: Char): Boolean {
+        var isWin = false
+        for(i in grid) {
+            if (checkThreeElement(i[0], i[1], i[2], player)) isWin = true
+        }
+        for(i in grid.indices) {
+            if (checkThreeElement(grid[0][i], grid[1][i], grid[2][i], player)) isWin = true
+        }
+        if (checkThreeElement(grid[0][0], grid[1][1], grid[2][2], player)) isWin = true
+        if (checkThreeElement(grid[0][2], grid[1][1], grid[2][0], player)) isWin = true
+        return isWin
+    }
+    
+    private fun checkThreeElement(a: Char, b: Char, c: Char, element: Char): Boolean = a == element && b == element && c == element
+    
+    private fun checkEmptyCells(): Boolean {
+        var isEmptyCell = false
+        for(i in grid) {
+            if (i.indexOf(' ') != -1) isEmptyCell = true
+        }
+        return isEmptyCell
+    }
+    
+    private fun checkPossible(): Boolean {
+        var isPossible = false
+        
+        var countX = 0
+        var countO = 0
+        for(i in grid.indices) {
+            for(j in grid[i].indices) {
+                if (grid[i][j] == 'X') countX++
+                if (grid[i][j] == 'O') countO++
+            }
+        }
+        
+        if (Math.abs(countX - countO) < 2) isPossible = true
+        return isPossible
+    }
+    
+    private fun showGrid() {
+        println("---------")
+        for(i in grid) {
+            println("| ${i.joinToString(" ")} |")
+        }
+        println("---------")
+    }
+}
